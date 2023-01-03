@@ -1,0 +1,4 @@
+# Optional. A Secret name to load config from if not using Instance Principal authentication.
+{
+    "ociProfileSecretName": "oci-profile",
+}

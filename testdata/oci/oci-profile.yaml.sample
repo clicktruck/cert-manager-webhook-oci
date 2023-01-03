@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oci-profile
+type: Opaque
+stringData:
+  tenancy: "$OCI_TENANCY_OCID"
+  user: "$OCI_USER_OCID"
+  region: "$OCI_REGION"
+  fingerprint: "$OCI_FINGERPRINT"
+  privateKey: |
+    $OCI_PRIVATE_KEY
+  privateKeyPassphrase: ""
