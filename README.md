@@ -108,6 +108,18 @@ spec:
   secretName: example-cert
 ```
 
+## Scripts
+
+A collection of BaSH scripts is available in the [scripts](scripts) directory.  These are meant to help you prepare, install, and uninstall this webhook.
+
+1. [Prepare](scripts/prepare-cert-manager-webhook-oci.sh)
+  * Builds, tags, and pushes container image to a container image repository
+  * Target repository provider is [GCR](https://cloud.google.com/container-registry)
+2. [Install](scripts/install-cert-manager-webhook-oci.sh)
+  * Helm chart local install
+3. [Uninstall](scripts/uninstall-cert-manager-webhook-oci.sh)
+  * Helm chart local uninstall
+
 ## Development
 
 ### Updating dependencies
