@@ -114,9 +114,13 @@ A collection of BaSH scripts is available in the [scripts](scripts) directory.  
 
 1. [Prepare](scripts/prepare-cert-manager-webhook-oci.sh)
   * Builds, tags, and pushes container image to a container image repository
-  * Target repository provider is [GCR](https://cloud.google.com/container-registry)
+  * Target repository provider is [OCIR](https://docs.oracle.com/en-us/iaas/Content/Registry/Concepts/registryoverview.htm#Overview_of_Registry)
+  * Update environment variables
+  * Run this script only if you choose to host your own version of this webhook image in a private container image repository
 2. [Install](scripts/install-cert-manager-webhook-oci.sh)
   * Helm chart local install
+  * Update environment variables
+  * Uncomment lines for pull secret creation only if you are hosting your own version of this webhook image
 3. [Uninstall](scripts/uninstall-cert-manager-webhook-oci.sh)
   * Helm chart local uninstall
 

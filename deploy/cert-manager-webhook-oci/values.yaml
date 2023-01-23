@@ -11,7 +11,7 @@ certManager:
   serviceAccountName: cert-manager
 
 image:
-  repository: us.gcr.io/fe-cphillipson/cert-manager-webhook-oci
+  repository: phx.ocir.io/axyd58snjxbf/cert-manager-webhook-oci
   tag: latest
   pullPolicy: IfNotPresent
 

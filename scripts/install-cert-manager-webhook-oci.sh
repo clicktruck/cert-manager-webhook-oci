@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
+set -eox pipefail
 
 indent4() { sed 's/^/    /'; }
 
 # Install the necessary resources to support cert-manager deployed on OKE
 # vending valid certificate via a Let's Encrypt ClusterIssuer
 
-# Set environemnt variables (these are sample values, please replace with your own)
+# Set environment variables (these are sample values, please replace with your own)
 export DOMAIN=foo.me
 export EMAIL_ADDRESS=any@valid.email
 export COMPARTMENT_OCID=ocid1.compartment.oc1..aaaaaaaa_
@@ -13,14 +14,11 @@ export TENANCY_OCID=ocid1.tenancy.oc1..aaaaaaaa_
 export USER_OCID=ocid1.user.oc1..aaaaaaaa_
 export REGION=us-phoenix-1
 export FINGERPRINT=47:5f:c7:0d:a3:a5:ac:d6:53:41:d2:23:c6:c9:24:a2
+export IMAGE_REPOSITORY_NAME=phx.ocir.io/axyd58snjxbf/cert-manager-webhook-oci
 
 # Oracle Cloud credentials
 export OCI_CONFIG_HOME=$HOME/.oci
 export OCI_PEM_PRIVATE_KEY_FILE_PATH=$OCI_CONFIG_HOME/oci_api_key.pem
-
-# Google Cloud credentials (where I've decided to host updated webhook container image)
-export GOOGLE_PROJECT_ID=fe-cphillipson
-export GOOGLE_APPLICATION_CREDENTIALS=$HOME/.ssh/terraform@${GOOGLE_PROJECT_ID}.iam.gserviceaccount.com.json
 
 # Convert PEM private key to RSA
 openssl rsa -in $OCI_PEM_PRIVATE_KEY_FILE_PATH -out $OCI_CONFIG_HOME/oci_api_rsa_key
@@ -44,19 +42,23 @@ helm install \
 # Install cert-manager OCI webhook
 # This is from a fork of https://gitlab.com/dn13/cert-manager-webhook-oci
 # @see https://gitlab.com/jcotton/cert-manager-webhook-oci.git
+cd /tmp
 git clone https://gitlab.com/jcotton/cert-manager-webhook-oci.git
 cd cert-manager-webhook-oci
 git checkout fix_and_update
 helm install --namespace cert-manager cert-manager-webhook-oci ./deploy/cert-manager-webhook-oci \
-  --set image.repository=us.gcr.io/$GOOGLE_PROJECT_ID/cert-manager-webhook-oci
+  --set image.repository=$IMAGE_REPOSITORY_NAME
 
-# Create image pull secret
-kubectl create secret docker-registry regcred \
-  --docker-server=us.gcr.io \
-  --docker-username=_json_key \
-  --docker-password="$(cat $GOOGLE_APPLICATION_CREDENTIALS)" \
-  --docker-email=${EMAIL_ADDRESS} \
-  --namespace cert-manager
+# Create an image pull secret
+# Uncomment lines below, then add appropriate credentials, but only if you choose to host your own image and have updated the IMAGE_REPOSITORY_NAME above
+#export DOCKER_USERNAME=
+#export DOCKER_PASSWORD=
+#kubectl create secret docker-registry regcred \
+#  --docker-server=us.gcr.io \
+#  --docker-username=$DOCKER_USERNAME \
+#  --docker-password="$DOCKER_PASSWORD" \
+#  --docker-email=${EMAIL_ADDRESS} \
+#  --namespace cert-manager
 
 # Create namespace to store secret
 kubectl create ns contour-tls

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -eox pipefail
 
 # Uninstall the resources supporting cert-manager deployed on OKE
 # vending valid certificate via a Let's Encrypt ClusterIssuer

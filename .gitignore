@@ -18,6 +18,7 @@
 /testdata/oci/*
 !/testdata/oci/*.sample
 _test/*
+test.sh
 
 # Visual Studio Code
 .history/
