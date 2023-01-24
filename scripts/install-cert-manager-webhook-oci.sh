@@ -52,10 +52,11 @@ helm install --namespace cert-manager cert-manager-webhook-oci ./deploy/cert-man
 # Uncomment lines below, then add appropriate credentials, but only if you choose to host your own image and have updated the IMAGE_REPOSITORY_NAME above
 #export DOCKER_USERNAME=
 #export DOCKER_PASSWORD=
+#export DOCKER_HOST=
 #kubectl create secret docker-registry regcred \
-#  --docker-server=us.gcr.io \
-#  --docker-username=$DOCKER_USERNAME \
-#  --docker-password="$DOCKER_PASSWORD" \
+#  --docker-server=${DOCKER_HOST} \
+#  --docker-username=${DOCKER_USERNAME} \
+#  --docker-password="${DOCKER_PASSWORD}" \
 #  --docker-email=${EMAIL_ADDRESS} \
 #  --namespace cert-manager
 
