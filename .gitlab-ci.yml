@@ -1,4 +1,4 @@
-image: golang:1.19.4-alpine
+image: golang:1.20.4-alpine
 
 stages:
   - test

@@ -1,0 +1,347 @@
+---
+# Source: cert-manager-webhook-oci/templates/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: cert-manager-webhook-oci
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+---
+# Source: cert-manager-webhook-oci/templates/rbac-ext.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager-webhook-oci:flowcontrol-solver
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+rules:
+  - apiGroups:
+      - "flowcontrol.apiserver.k8s.io"
+    resources:
+      - 'prioritylevelconfigurations'
+      - 'flowschemas'
+    verbs:
+      - 'list'
+      - 'watch'
+---
+# Source: cert-manager-webhook-oci/templates/rbac.yaml
+# Grant cert-manager permission to validate using our apiserver
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: cert-manager-webhook-oci:domain-solver
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+rules:
+  - apiGroups:
+      - acme.d-n.be
+    resources:
+      - '*'
+    verbs:
+      - 'create'
+---
+# Source: cert-manager-webhook-oci/templates/rbac-ext.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-webhook-oci:flowcontrol-solver
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-webhook-oci:flowcontrol-solver
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager-webhook-oci
+    namespace: "cert-manager"
+---
+# Source: cert-manager-webhook-oci/templates/rbac.yaml
+# apiserver gets the auth-delegator role to delegate auth decisions to
+# the core apiserver
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-webhook-oci:auth-delegator
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: system:auth-delegator
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager-webhook-oci
+    namespace: cert-manager
+---
+# Source: cert-manager-webhook-oci/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: cert-manager-webhook-oci:domain-solver
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cert-manager-webhook-oci:domain-solver
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager
+    namespace: cert-manager
+---
+# Source: cert-manager-webhook-oci/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cert-manager-webhook-oci:secret-reader
+  namespace: cert-manager
+rules:
+  - apiGroups:
+    - ""
+    resources:
+    - "secrets"
+    resourceNames:
+    - oci-profile
+    verbs:
+    - "get"
+    - "watch"
+---
+# Source: cert-manager-webhook-oci/templates/rbac.yaml
+# Grant the webhook permission to read the ConfigMap containing the Kubernetes
+# apiserver's requestheader-ca-certificate.
+# This ConfigMap is automatically created by the Kubernetes apiserver.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cert-manager-webhook-oci:webhook-authentication-reader
+  namespace: kube-system
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: extension-apiserver-authentication-reader
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager-webhook-oci
+    namespace: cert-manager
+---
+# Source: cert-manager-webhook-oci/templates/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cert-manager-webhook-oci:secret-reader
+  namespace: cert-manager
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cert-manager-webhook-oci:secret-reader
+subjects:
+  - apiGroup: ""
+    kind: ServiceAccount
+    name: cert-manager-webhook-oci
+    namespace: cert-manager
+---
+# Source: cert-manager-webhook-oci/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: cert-manager-webhook-oci
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 443
+      targetPort: https
+      protocol: TCP
+      name: https
+  selector:
+    app: cert-manager-webhook-oci
+    release: cert-manager-webhook-oci
+---
+# Source: cert-manager-webhook-oci/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cert-manager-webhook-oci
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+spec:
+  replicas: 
+  selector:
+    matchLabels:
+      app: cert-manager-webhook-oci
+      release: cert-manager-webhook-oci
+  template:
+    metadata:
+      labels:
+        app: cert-manager-webhook-oci
+        release: cert-manager-webhook-oci
+    spec:
+      serviceAccountName: cert-manager-webhook-oci
+      containers:
+        - name: cert-manager-webhook-oci
+          image: "tpham/cert-manager-webhook-oci:latest"
+          imagePullPolicy: Always
+          args:
+            - --tls-cert-file=/tls/tls.crt
+            - --tls-private-key-file=/tls/tls.key
+          env:
+            - name: GROUP_NAME
+              value: "acme.d-n.be"
+            - name: OCI_RESOURCE_PRINCIPAL_VERSION
+              value: "2.2"
+            - name: OCI_RESOURCE_PRINCIPAL_REGION
+              value: "eu-zurich-1"
+          ports:
+            - name: https
+              containerPort: 443
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          readinessProbe:
+            httpGet:
+              scheme: HTTPS
+              path: /healthz
+              port: https
+          volumeMounts:
+            - name: certs
+              mountPath: /tls
+              readOnly: true
+          resources:
+            {}
+      volumes:
+        - name: certs
+          secret:
+            secretName: cert-manager-webhook-oci-webhook-tls
+---
+# Source: cert-manager-webhook-oci/templates/apiservice.yaml
+apiVersion: apiregistration.k8s.io/v1
+kind: APIService
+metadata:
+  name: v1alpha1.acme.d-n.be
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+  annotations:
+    cert-manager.io/inject-ca-from: "cert-manager/cert-manager-webhook-oci-webhook-tls"
+spec:
+  group: acme.d-n.be
+  groupPriorityMinimum: 1000
+  versionPriority: 15
+  service:
+    name: cert-manager-webhook-oci
+    namespace: cert-manager
+  version: v1alpha1
+---
+# Source: cert-manager-webhook-oci/templates/pki.yaml
+# Generate a CA Certificate used to sign certificates for the webhook
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert-manager-webhook-oci-ca
+  namespace: "cert-manager"
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+spec:
+  secretName: cert-manager-webhook-oci-ca
+  duration: 43800h # 5y
+  issuerRef:
+    name: cert-manager-webhook-oci-selfsign
+  commonName: "ca.cert-manager-webhook-oci.cert-manager"
+  isCA: true
+---
+# Source: cert-manager-webhook-oci/templates/pki.yaml
+# Finally, generate a serving certificate for the webhook to use
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: cert-manager-webhook-oci-webhook-tls
+  namespace: "cert-manager"
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+spec:
+  secretName: cert-manager-webhook-oci-webhook-tls
+  duration: 8760h # 1y
+  issuerRef:
+    name: cert-manager-webhook-oci-ca
+  dnsNames:
+  - cert-manager-webhook-oci
+  - cert-manager-webhook-oci.cert-manager
+  - cert-manager-webhook-oci.cert-manager.svc
+---
+# Source: cert-manager-webhook-oci/templates/pki.yaml
+# Create a selfsigned Issuer, in order to create a root CA certificate for
+# signing webhook serving certificates
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: cert-manager-webhook-oci-selfsign
+  namespace: "cert-manager"
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+spec:
+  selfSigned: {}
+---
+# Source: cert-manager-webhook-oci/templates/pki.yaml
+# Create an Issuer that uses the above generated CA certificate to issue certs
+apiVersion: cert-manager.io/v1
+kind: Issuer
+metadata:
+  name: cert-manager-webhook-oci-ca
+  namespace: "cert-manager"
+  labels:
+    app: cert-manager-webhook-oci
+    chart: cert-manager-webhook-oci-1.11.2
+    release: cert-manager-webhook-oci
+    heritage: Helm
+spec:
+  ca:
+    secretName: cert-manager-webhook-oci-ca

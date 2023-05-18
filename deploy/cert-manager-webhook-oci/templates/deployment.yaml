@@ -30,6 +30,10 @@ spec:
           env:
             - name: GROUP_NAME
               value: {{ .Values.groupName | quote }}
+            - name: OCI_RESOURCE_PRINCIPAL_VERSION
+              value: {{ .Values.ociResourcePrincipal.version | quote }}
+            - name: OCI_RESOURCE_PRINCIPAL_REGION
+              value: {{ .Values.ociResourcePrincipal.region | quote }}
           ports:
             - name: https
               containerPort: 443

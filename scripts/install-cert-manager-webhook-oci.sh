@@ -34,7 +34,7 @@ helm install \
   cert-manager jetstack/cert-manager \
   --namespace cert-manager \
   --create-namespace \
-  --version v1.10.1 \
+  --version v1.11.2 \
   --set installCRDs=true \
   --set prometheus.enabled=false \
   --set webhook.timeoutSeconds=30

@@ -11,9 +11,9 @@ certManager:
   serviceAccountName: cert-manager
 
 image:
-  repository: phx.ocir.io/axyd58snjxbf/cert-manager-webhook-oci
+  repository: tpham/cert-manager-webhook-oci
   tag: latest
-  pullPolicy: IfNotPresent
+  pullPolicy: Always
 
 nameOverride: ""
 fullnameOverride: ""
@@ -24,6 +24,10 @@ service:
 
 ociProfileSecretNames:
   - oci-profile
+
+ociResourcePrincipal:
+  version: 2.2
+  region: eu-zurich-1
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -43,5 +47,5 @@ tolerations: []
 
 affinity: {}
 
-imagePullSecrets:
-  - name: regcred
+#imagePullSecrets:
+#  - name: regcreds

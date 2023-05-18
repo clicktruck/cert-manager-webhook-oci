@@ -3,10 +3,10 @@
 This solver can be used when you want to use cert-manager with Oracle Cloud Infrastructure as a DNS provider.
 
 ## Requirements
--   [go](https://golang.org/) >= 1.19.4 *only for development*
+-   [go](https://golang.org/) >= 1.20.4 *only for development*
 -   [helm](https://helm.sh/) >= v3.10.2
--   [kubernetes](https://kubernetes.io/) >= v1.24.0
--   [cert-manager](https://cert-manager.io/) >= 1.10.1
+-   [kubernetes](https://kubernetes.io/) >= v1.26.2
+-   [cert-manager](https://cert-manager.io/) >= 1.11.2
 
 ## Clone
 
@@ -20,18 +20,30 @@ git clone https://github.com/pacphi/cert-manager-webhook-oci
 
 Follow the [instructions](https://cert-manager.io/docs/installation/) using the cert-manager documentation to install it within your cluster.
 
+```bash
+helm repo add jetstack https://charts.jetstack.io
+helm repo update
+helm upgrade --install --create-namespace \
+  --version v1.11.2 \
+  -n cert-manager \
+  --set installCRDs=true \
+  cert-manager jetstack/cert-manager
+```
+
 ### Webhook
 
 #### From local checkout
 
 ```bash
-helm install --namespace cert-manager cert-manager-webhook-oci deploy/cert-manager-webhook-oci
+helm upgrade --install \
+  -n cert-manager \
+  cert-manager-webhook-oci deploy/cert-manager-webhook-oci
 ```
 **Note**: The kubernetes resources used to install the Webhook should be deployed within the same namespace as the cert-manager.
 
 To uninstall the webhook run
 ```bash
-helm uninstall --namespace cert-manager cert-manager-webhook-oci
+helm uninstall -n cert-manager cert-manager-webhook-oci
 ```
 
 ## Issuer
@@ -59,12 +71,28 @@ spec:
           webhook:
             groupName: acme.d-n.be
             solverName: oci
+            # next is only need with OCI API key auth
             config:
               ociProfileSecretName: oci-profile
               compartmentOCID: ocid-of-compartment-to-use
 ```
 
 ### Credentials
+
+#### OCI Workload principal auth
+
+A new feature was introduced in March 2023 that allow to write an OCI policy that identify kubernetes `service account` as an identity principal which we can delegate permission to access OCI services.
+
+related [blog announcement](https://blogs.oracle.com/cloud-infrastructure/post/oke-workload-identity-greater-control-access) and [documentation](https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contenggrantingworkloadaccesstoresources.htm).
+
+
+Policy statement example:
+
+```
+Allow any-user to manage dns in compartment id <compartment_ocid> where all { request.principal.type = 'workload', request.principal.namespace = 'cert-manager', request.principal.service_account = 'cert-manager-webhook-oci', request.principal.cluster_id = 'ocid1.cluster.oc1...' }
+```
+
+#### OCI API key auth (deprecated)
 
 In order to access the Oracle Cloud Infrastructure API, the webhook needs an OCI profile configuration.
 

@@ -146,7 +146,7 @@ func patchRequest(ch *v1alpha1.ChallengeRequest, operation dns.RecordOperationOp
 	ttl := 60
 
 	return dns.PatchZoneRecordsRequest{
-		ZoneNameOrId:  &ch.ResolvedZone,
+		ZoneNameOrId: &ch.ResolvedZone,
 
 		PatchZoneRecordsDetails: dns.PatchZoneRecordsDetails{
 			Items: []dns.RecordOperation{
@@ -207,10 +207,10 @@ func (c *ociDNSProviderSolver) ociDNSClient(cfg *ociDNSProviderConfig, namespace
 	klog.V(3).InfoS("Trying to load oci profile from secret", "secret", secretName, "namespace", namespace)
 	sec, err := c.client.CoreV1().Secrets(namespace).Get(context.Background(), secretName, metav1.GetOptions{})
 	if err != nil {
-		klog.V(3).InfoS("Did not find a secret for oci configuration. Using instance principal auth.")
-		configProvider, err2 = auth.InstancePrincipalConfigurationProvider()
+		klog.V(3).InfoS("Did not find a secret for oci configuration. Using Workload principal auth.")
+		configProvider, err2 = auth.OkeWorkloadIdentityConfigurationProvider()
 		if err2 != nil {
-			return nil, fmt.Errorf("unable to get secret `%s/%s` and instance principal auth also failed; %v; %v", secretName, namespace, err, err2)
+			return nil, fmt.Errorf("unable to get secret `%s/%s` and Workload principal auth also failed; %v; %v", secretName, namespace, err, err2)
 		}
 	} else {
 		tenancy, err := stringFromSecretData(&sec.Data, "tenancy")
